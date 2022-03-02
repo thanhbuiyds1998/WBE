@@ -116,6 +116,7 @@ r=ggplot(WBE, aes(x=Weekday, y=Paracetamol, fill=Weekday))+
 r
 kruskal.test(Paracetamol~Weekday, data=WBE)
 table1(~Paracetamol|Weekday, data = WBE)
+
 ```
 
 #Between periods
@@ -180,5 +181,6 @@ kruskal.test(Paracetamol~as.factor(Period),data=WBE)
 kruskalmc(Paracetamol,as.factor(Period))
 table1(~Paracetamol|Period, data= WBE)
 ```
+
 
 
