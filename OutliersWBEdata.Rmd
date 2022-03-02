@@ -249,6 +249,7 @@ r=ggplot(iWBE_remove, aes(x=Weekday, y=Paracetamol, fill=Weekday))+
 r
 kruskal.test(Paracetamol~Weekday, data=iWBE_remove)
 table1(~Paracetamol|Weekday, data = iWBE_remove)
+
 ```
 
 #Between periods
