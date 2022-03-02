@@ -1,0 +1,184 @@
+---
+title: "WBE_nic_para_ace"
+author: "Thanh Bui"
+date: "2/22/2022"
+output:
+  word_document: default
+  html_document: default
+---
+---
+title: "Outlier_detection"
+output:
+  word_document: default
+  html_document: default
+---
+#Loading package
+
+```{r}
+require(nortest)
+require(tidyverse)
+require(lubridate)
+require(coin)
+require(ggeasy)
+require(table1)
+library(car)
+library(mice); library(VIM)
+require(pgirmess)
+```
+#Input data
+```{r}
+setwd("E:/WBE")
+WBE = read.csv("Data_nicotine_ace_para.csv",header=T,na.strings = ".")
+WBE$Date= mdy(WBE$Date)
+attach(WBE)
+```
+
+
+#Back-calculation of metabolites
+```{r}
+R15 =6029878/8053663 #Population aged 15+
+
+WBE= WBE%>%
+  mutate(Weekday= wday(Date,label=T,abbr = T))%>%
+  mutate(NICabs_COT =((COT1*80000+COT2*85000)*2.85)/((400000+430000)*R15))%>%
+  mutate(NICabs_COT.HCOT = (((COT1+HCOT1)*80000+(COT2+HCOT2)*85000)*1.35)/((400000+430000)*R15))%>%
+  mutate(Tobacco_COT = NICabs_COT/(0.172*0.9))%>%
+  mutate(Tobacco_COT.HCOT = NICabs_COT.HCOT/(0.172*0.9))%>%
+  mutate(Acesulfame = 1*(ACE1*80000 + ACE2*85000)/(400000+430000))%>%
+  mutate(Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
+wilcox.test(WBE$NICabs_COT,WBE$NICabs_COT.HCOT)
+cor.test(WBE$NICabs_COT, WBE$NICabs_COT.HCOT, method = "pearson") #examine correlation in nicotine consumption by two methods
+```
+**Massload of metabolite and NIC/COT ratio**
+```{r}
+WBE = WBE %>% 
+  mutate(NICavg= (NIC1*80000+NIC2*85000)/165000)%>%
+  mutate(COTavg= (COT1*80000+COT2*85000)/165000)%>%
+  mutate(HCOTavg= (HCOT1*80000+HCOT2*85000)/165000)%>%
+  mutate(NIC.COT= NICavg/COTavg)%>%
+  mutate(COTmass= COTavg*165000/(830000*R15))%>%
+  mutate(PARAmass= (PARA1*80000+ PARA2*85000)/(830000))%>%
+  mutate(ACEmass= (ACE1*80000+ ACE2*85000)/(830000))
+table1(~NIC.COT|Period, data = WBE)
+table1(~COTmass+ PARAmass + ACEmass|Period,data= WBE)
+attach(WBE)
+```
+
+
+
+#Weekly variation
+```{r}
+
+#Nicotine
+##Only cotinine
+p= ggplot(WBE, aes(x=Weekday, y=NICabs_COT, fill=Weekday))+
+  geom_boxplot() + labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption by cotinine")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()
+p
+kruskal.test(NICabs_COT~Weekday, data=WBE)
+table1(~NICabs_COT+ Tobacco_COT|Weekday, data = WBE)
+##Both cotinine and hydroxycotinine
+w=ggplot(WBE, aes(x=Weekday, y=NICabs_COT.HCOT, fill=Weekday))+
+  geom_boxplot() + labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption by both metabolites")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()
+w
+kruskal.test(NICabs_COT.HCOT~Weekday, data=WBE)
+table1(~NICabs_COT.HCOT+ Tobacco_COT.HCOT|Weekday, data = WBE)
+
+#Acesulfame
+q=ggplot(WBE, aes(x=Weekday, y=Acesulfame, fill=Weekday))+
+  geom_boxplot() + labs(y="Acesulfame consumption (mg/day/person)",x=NULL)+
+  ggtitle("Acesulfame consumption")+ easy_center_title()+
+  theme_bw()+ 
+  theme_classic()+
+  easy_remove_legend()
+q
+kruskal.test(Acesulfame~Weekday, data=WBE)
+table1(~Acesulfame|Weekday, data = WBE)
+
+#Paracetamol
+r=ggplot(WBE, aes(x=Weekday, y=Paracetamol, fill=Weekday))+
+  geom_boxplot() + labs(y="Paracetamol consumption (mg/day/person)",x=NULL)+
+  ggtitle("Paracetamol consumption")+ easy_center_title()+
+  theme_bw()+ 
+  theme_classic()+
+  easy_remove_legend()
+r
+kruskal.test(Paracetamol~Weekday, data=WBE)
+table1(~Paracetamol|Weekday, data = WBE)
+```
+
+#Between periods
+```{r}
+#Nicotine
+##Only cotinine
+attach(WBE)
+s= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
+  geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption (by cotinine)")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "blue", high= "red")
+s
+kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
+kruskalmc(NICabs_COT,as.factor(Period))
+table1(~NICabs_COT|Period, data= WBE)
+##Both metabolites
+z= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT.HCOT, fill=Period))+
+  geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption (by both metabolites)")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+   scale_fill_gradient("Period", low = "blue", high= "red")
+z
+kruskal.test(NICabs_COT.HCOT~as.factor(Period),data=WBE)
+kruskalmc(NICabs_COT.HCOT,as.factor(Period))
+table1(~NICabs_COT.HCOT|Period, data= WBE)
+
+#Acesulfame
+
+t= ggplot(WBE,aes(x= as.factor(Period),y=Acesulfame, fill=Period))+
+  geom_boxplot()+ labs(y="Acesulfame consumption (mg/day/person)",x=NULL)+ 
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "green", high= "red")
+t
+kruskal.test(Acesulfame~as.factor(Period),data=WBE)
+kruskalmc(Acesulfame,as.factor(Period))
+table1(~Acesulfame|Period, data= WBE)
+
+#Paracetamol
+u= ggplot(WBE,aes(x= as.factor(Period),y=Paracetamol, fill=Period))+
+  geom_boxplot()+ labs(y="Paracetamol consumption (mg/day/person)",x=NULL)+ 
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "green", high= "red")
+u
+kruskal.test(Paracetamol~as.factor(Period),data=WBE)
+kruskalmc(Paracetamol,as.factor(Period))
+table1(~Paracetamol|Period, data= WBE)
+```
+
+

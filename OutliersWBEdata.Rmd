@@ -1,0 +1,316 @@
+---
+title: "Outlier_detection"
+output:
+  word_document: default
+  html_document: default
+---
+#Loading package
+
+```{r}
+require(nortest)
+require(tidyverse)
+require(lubridate)
+require(coin)
+require(ggeasy)
+require(table1)
+library(car)
+library(mice); library(VIM)
+require(pgirmess)
+```
+#Input data
+```{r}
+setwd("E:/WBE")
+metabolite = read.csv("Data_nicotine_ace_para.csv",header=T,na.strings = ".")
+metabolite$Date= mdy(metabolite$Date)
+attach(metabolite)
+```
+
+#Combine metabolites into one variable
+```{r}
+nicotine= data.frame(NIC1,NIC2,Weekday,Date,Period)
+cotinine= data.frame(COT1,COT2,Weekday,Date,Period)
+ohcotinine= data.frame(HCOT1,HCOT2,Date, Weekday,Period)
+para= data.frame(PARA1,PARA2,Weekday,Date, Period)
+ace= data.frame(ACE1,ACE2,Weekday,Date,Period)
+```
+#Gather data
+```{r}
+NICOTINE= gather(nicotine,"Location","NIC",c(NIC1,NIC2))
+COTININE= gather(cotinine,"Location","COT",c(COT1,COT2))
+HCOTININE= gather(ohcotinine,"Location","HCOT",c(HCOT1,HCOT2))
+PARACETAMOL= gather(para,"Location","PARA",c(PARA1,PARA2))
+ACESULFAME= gather(ace,"Location","ACE",c(ACE1,ACE2))
+```
+#Detect outlier values
+##Univariate approach
+```{r}
+##Nicotine
+outlier_values_nicotine <- boxplot.stats(NICOTINE$NIC)$out  # outlier values.
+boxplot(NICOTINE$NIC, main="Nicotine", boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values_nicotine, collapse=", ")), cex=0.6)
+
+##Cotinine
+outlier_values_cotinine <- boxplot.stats(COTININE$COT)$out  # outlier values.
+boxplot(COTININE$COT, main="Cotinine", boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values_cotinine, collapse=", ")), cex=0.6)
+
+##Hydroxycotinine
+outlier_values_ohcotinine <- boxplot.stats(HCOTININE$HCOT)$out  # outlier values.
+boxplot(HCOTININE$HCOT, main="Hydroxycotinine", boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values_ohcotinine, collapse=", ")), cex=0.6)
+
+##Paracetamol
+outlier_values_paracetamol <- boxplot.stats(PARACETAMOL$PARA)$out  # outlier values.
+boxplot(PARACETAMOL$PARA, main="Paracetamol", boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values_paracetamol, collapse=", ")), cex=0.6)
+
+##Acesulfame
+outlier_values_acesulfame <- boxplot.stats(ACESULFAME$ACE)$out  # outlier values.
+boxplot(ACESULFAME$ACE, main="Acesulfame", boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values_acesulfame, collapse=", ")), cex=0.6)
+
+```
+##Multivariate approach
+
+```{r}
+##Nicotine
+mod_nic <- lm(NIC ~ Weekday, data=NICOTINE)
+cooksd_nic <- cooks.distance(mod_nic)
+plot(cooksd_nic, pch="*", cex=2, main="Influential Obs by Cooks distance (Nicotine)")  # plot cook's distance
+abline(h = 4*mean(cooksd_nic, na.rm=T), col="red")  # add cutoff line
+cooksd_nic[cooksd_nic>4*mean(cooksd_nic)] #define outliers'line
+text(x=1:length(cooksd_nic)+1, y=cooksd_nic, labels=ifelse(cooksd_nic>4*mean(cooksd_nic, na.rm=T),names(cooksd_nic),""), col="red") # add labels
+
+##Cotinine
+mod_cot <- lm(COT ~ Weekday, data=COTININE)
+cooksd_cot <- cooks.distance(mod_cot)
+plot(cooksd_cot, pch="*", cex=2, main="Influential Obs by Cooks distance (Cotinine)")  # plot cook's distance
+abline(h = 4*mean(cooksd_cot, na.rm=T), col="red")  # add cutoff line
+cooksd_cot[cooksd_cot>4*mean(cooksd_cot)] #define outliers'line
+text(x=1:length(cooksd_cot)+1, y=cooksd_cot, labels=ifelse(cooksd_cot>4*mean(cooksd_cot, na.rm=T),names(cooksd_cot),""), col="red")
+
+
+##Hydroxycotinine
+mod_hcot <- lm(HCOT ~ Weekday, data=HCOTININE)
+cooksd_hcot <- cooks.distance(mod_hcot)
+plot(cooksd_hcot, pch="*", cex=2, main="Influential Obs by Cooks distance (Hydroxycotinine)")  # plot cook's distance
+abline(h = 4*mean(cooksd_hcot, na.rm=T), col="red")  # add cutoff line
+cooksd_hcot[cooksd_hcot>4*mean(cooksd_hcot)] #define outliers'line
+text(x=1:length(cooksd_hcot)+1, y=cooksd_hcot, labels=ifelse(cooksd_hcot>4*mean(cooksd_hcot, na.rm=T),names(cooksd_hcot),""), col="red")
+
+##Paracetamol
+mod_para <- lm(PARA ~ Weekday, data=PARACETAMOL)
+cooksd_para <- cooks.distance(mod_para)
+plot(cooksd_para, pch="*", cex=2, main="Influential Obs by Cooks distance (Paracetamol)")  # plot cook's distance
+abline(h = 4*mean(cooksd_para, na.rm=T), col="red")  # add cutoff line
+cooksd_para[cooksd_para>4*mean(cooksd_para)] #define outliers'line
+text(x=1:length(cooksd_para)+1, y=cooksd_para, labels=ifelse(cooksd_para>4*mean(cooksd_para, na.rm=T),names(cooksd_para),""), col="red")
+
+##Acesulfame
+mod_ace <- lm(ACE ~ Weekday, data=ACESULFAME)
+cooksd_ace <- cooks.distance(mod_ace)
+plot(cooksd_ace, pch="*", cex=2, main="Influential Obs by Cooks distance (Acesulfame)")  # plot cook's distance
+abline(h = 4*mean(cooksd_ace, na.rm=T), col="red")  # add cutoff line
+cooksd_ace[cooksd_ace>4*mean(cooksd_ace)] #define outliers'line
+text(x=1:length(cooksd_ace)+1, y=cooksd_ace, labels=ifelse(cooksd_ace>4*mean(cooksd_ace, na.rm=T),names(cooksd_ace),""), col="red")
+```
+
+
+#Remove outliers
+```{r}
+#NICOTINE
+influential_nic <- as.numeric(names(cooksd_nic)[cooksd_nic>4*mean(cooksd_nic)])
+NICOTINE_clear <- NICOTINE[-influential_nic,]
+
+
+#COTININE
+influential_cot <- as.numeric(names(cooksd_cot)[cooksd_cot>4*mean(cooksd_cot)])
+COTININE_clear <- COTININE[-influential_cot,]
+
+
+#HYROXYCOTININE
+influential_hcot <- as.numeric(names(cooksd_hcot)[cooksd_hcot>4*mean(cooksd_hcot)])
+HCOTININE_clear <- HCOTININE[-influential_hcot,]
+
+
+#PARACETAMOL
+influential_para <- as.numeric(names(cooksd_para)[cooksd_para>4*mean(cooksd_para)])
+PARACETAMOL_clear <- PARACETAMOL[-influential_para,]
+
+
+#ACESULFAME
+influential_ace <- as.numeric(names(cooksd_ace)[cooksd_ace>4*mean(cooksd_ace)])
+ACESULFAME_clear <- ACESULFAME[-influential_ace,]
+
+```
+
+#From long data to short data
+```{r}
+NICOTINE_remove = spread(NICOTINE_clear, key = "Location", value ="NIC")
+COTININE_remove = spread(COTININE_clear, key = "Location", value ="COT")
+HCOTININE_remove = spread(HCOTININE_clear, key = "Location", value ="HCOT")
+ACESULFAME_remove = spread(ACESULFAME_clear, key = "Location", value ="ACE")
+PARACETAMOL_remove = pivot_wider(PARACETAMOL_clear, names_from = "Location", values_from = "PARA")
+```
+#Merge data
+```{r}
+x= merge(NICOTINE_remove,COTININE_remove, by= c("Weekday","Date","Period"),all = TRUE)
+y= merge(x,HCOTININE_remove, by= c("Weekday","Date","Period"),all = TRUE)
+z= merge(y,ACESULFAME_remove, by= c("Weekday","Date","Period"),all = TRUE)
+WBE_remove= merge(z,PARACETAMOL_remove, by= c("Weekday","Date","Period"),all = TRUE)
+```
+#Imputation
+```{r}
+aggr(WBE_remove)
+mWBE_remove = mice(WBE_remove, seed=123, printFlag=F)
+iWBE_remove = complete(mWBE_remove, action=1)
+model1 = lm(NIC1 ~ COT1 + HCOT1, data= WBE_remove)
+model2 = lm(NIC1 ~ COT1 + HCOT1, data= iWBE_remove)
+summary(model1)
+summary(model2)
+```
+#Back-calculation of metabolites
+```{r}
+R15 =6029878/8053663 #Population aged 15+
+
+iWBE_remove= iWBE_remove%>%
+  mutate(Weekday= wday(Date,label=T,abbr = T))%>%
+  mutate(NICabs_COT =((COT1*80000+COT2*85000)*2.85)/((400000+430000)*R15))%>%
+  mutate(NICabs_COT.HCOT = (((COT1+HCOT1)*80000+(COT2+HCOT2)*85000)*1.35)/((400000+430000)*R15))%>%
+  mutate(Tobacco_COT = NICabs_COT/0.172)%>%
+  mutate(Tobacco_COT.HCOT = NICabs_COT.HCOT/0.172)%>%
+  mutate(Acesulfame = 1*(ACE1*80000 + ACE2*85000)/(400000+430000))%>%
+  mutate(Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
+
+```
+**Massload of metabolite and NIC/COT ratio**
+```{r}
+iWBE_remove = iWBE_remove %>% 
+  mutate(NICavg= (NIC1*80000+NIC2*85000)/165000)%>%
+  mutate(COTavg= (COT1*80000+COT2*85000)/165000)%>%
+  mutate(NIC.COT= NICavg/COTavg)%>%
+  mutate(COTmass= COTavg*165000/(830000*R15))%>%
+  mutate(PARAmass= (PARA1*80000+ PARA2*85000)/(830000*R15))%>%
+  mutate(ACEmass= (ACE1*80000+ ACE2*85000)/(830000*R15))
+table1(~NIC.COT|Period, data = iWBE_remove)
+table1(~COTmass+ PARAmass + ACEmass|Period,data= iWBE_remove)
+
+```
+
+
+
+#Weekly variation
+```{r}
+
+#Nicotine
+##Only cotinine
+p= ggplot(iWBE_remove, aes(x=Weekday, y=NICabs_COT, fill=Weekday))+
+  geom_boxplot() + labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption by cotinine")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()
+p
+kruskal.test(NICabs_COT~Weekday, data=iWBE_remove)
+table1(~NICabs_COT|Weekday, data = iWBE_remove)
+##Both cotinine and hydroxycotinine
+w=ggplot(iWBE_remove, aes(x=Weekday, y=NICabs_COT.HCOT, fill=Weekday))+
+  geom_boxplot() + labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption by both metabolites")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()
+w
+kruskal.test(NICabs_COT.HCOT~Weekday, data=iWBE_remove)
+table1(~NICabs_COT.HCOT|Weekday, data = iWBE_remove)
+
+#Acesulfame
+q=ggplot(iWBE_remove, aes(x=Weekday, y=Acesulfame, fill=Weekday))+
+  geom_boxplot() + labs(y="Acesulfame consumption (mg/day/person)",x=NULL)+
+  ggtitle("Acesulfame consumption")+ easy_center_title()+
+  theme_bw()+ 
+  theme_classic()+
+  easy_remove_legend()
+q
+kruskal.test(Acesulfame~Weekday, data=iWBE_remove)
+table1(~Acesulfame|Weekday, data = iWBE_remove)
+
+#Paracetamol
+r=ggplot(iWBE_remove, aes(x=Weekday, y=Paracetamol, fill=Weekday))+
+  geom_boxplot() + labs(y="Paracetamol consumption (mg/day/person)",x=NULL)+
+  ggtitle("Paracetamol consumption")+ easy_center_title()+
+  theme_bw()+ 
+  theme_classic()+
+  easy_remove_legend()
+r
+kruskal.test(Paracetamol~Weekday, data=iWBE_remove)
+table1(~Paracetamol|Weekday, data = iWBE_remove)
+```
+
+#Between periods
+```{r}
+#Nicotine
+##Only cotinine
+attach(iWBE_remove)
+s= ggplot(iWBE_remove,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
+  geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption (by cotinine)")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "blue", high= "red")
+s
+kruskal.test(NICabs_COT~as.factor(Period),data=iWBE_remove)
+kruskalmc(NICabs_COT,as.factor(Period))
+table1(~NICabs_COT|Period, data= iWBE_remove)
+##Both metabolites
+z= ggplot(iWBE_remove,aes(x= as.factor(Period),y=NICabs_COT.HCOT, fill=Period))+
+  geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
+  ggtitle("Nicotine consumption (by both metabolites)")+
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+   scale_fill_gradient("Period", low = "blue", high= "red")
+z
+kruskal.test(NICabs_COT.HCOT~as.factor(Period),data=iWBE_remove)
+kruskalmc(NICabs_COT.HCOT,as.factor(Period))
+table1(~NICabs_COT.HCOT|Period, data= iWBE_remove)
+
+#Acesulfame
+
+t= ggplot(iWBE_remove,aes(x= as.factor(Period),y=Acesulfame, fill=Period))+
+  geom_boxplot()+ labs(y="Acesulfame consumption (mg/day/person)",x=NULL)+ 
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "green", high= "red")
+t
+kruskal.test(Acesulfame~as.factor(Period),data=iWBE_remove)
+kruskalmc(Acesulfame,as.factor(Period))
+table1(~Acesulfame|Period, data= iWBE_remove)
+
+#Paracetamol
+u= ggplot(iWBE_remove,aes(x= as.factor(Period),y=Paracetamol, fill=Period))+
+  geom_boxplot()+ labs(y="Paracetamol consumption (mg/day/person)",x=NULL)+ 
+  easy_center_title()+ 
+  easy_remove_legend()+
+  easy_remove_legend_title()+
+  theme_bw()+
+  theme_classic()+
+  scale_fill_gradient("Period", low = "green", high= "red")
+u
+kruskal.test(Paracetamol~as.factor(Period),data=iWBE_remove)
+kruskalmc(Paracetamol,as.factor(Period))
+table1(~Paracetamol|Period, data= iWBE_remove)
+```
+
