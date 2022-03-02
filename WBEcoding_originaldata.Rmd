@@ -56,10 +56,19 @@ WBE = WBE %>%
   mutate(COTavg= (COT1*80000+COT2*85000)/165000)%>%
   mutate(HCOTavg= (HCOT1*80000+HCOT2*85000)/165000)%>%
   mutate(NIC.COT= NICavg/COTavg)%>%
+  mutate(NIC1.COT1= NIC1/COT1)%>% 
+  mutate(NIC2.COT2= NIC2/COT2)%>%
   mutate(COTmass= COTavg*165000/(830000*R15))%>%
   mutate(PARAmass= (PARA1*80000+ PARA2*85000)/(830000))%>%
   mutate(ACEmass= (ACE1*80000+ ACE2*85000)/(830000))
+attach(WBE)
+#Calculate by divide average amount of NIC and COT
 table1(~NIC.COT|Period, data = WBE)
+#Calculate NIT/COT ratio by divide NIC by COT in each place
+NIC.COT12= data.frame(Period, NIC1.COT1,NIC2.COT2)
+NIC.COT123 = gather(NIC.COT12, key = "Location", value ="NIC.COTs", c(NIC1.COT1,NIC2.COT2))
+table1(~NIC.COTs|Period, data = NIC.COT123)
+#Calculate mass load
 table1(~COTmass+ PARAmass + ACEmass|Period,data= WBE)
 attach(WBE)
 ```
@@ -80,8 +89,11 @@ p= ggplot(WBE, aes(x=Weekday, y=NICabs_COT, fill=Weekday))+
   theme_bw()+
   theme_classic()
 p
+
+
 kruskal.test(NICabs_COT~Weekday, data=WBE)
 table1(~NICabs_COT+ Tobacco_COT|Weekday, data = WBE)
+
 ##Both cotinine and hydroxycotinine
 w=ggplot(WBE, aes(x=Weekday, y=NICabs_COT.HCOT, fill=Weekday))+
   geom_boxplot() + labs(y="Nicotine consumption (mg/day/person 15+)",x=NULL)+
@@ -92,8 +104,10 @@ w=ggplot(WBE, aes(x=Weekday, y=NICabs_COT.HCOT, fill=Weekday))+
   theme_bw()+
   theme_classic()
 w
+
 kruskal.test(NICabs_COT.HCOT~Weekday, data=WBE)
 table1(~NICabs_COT.HCOT+ Tobacco_COT.HCOT|Weekday, data = WBE)
+
 
 #Acesulfame
 q=ggplot(WBE, aes(x=Weekday, y=Acesulfame, fill=Weekday))+
@@ -134,6 +148,7 @@ s= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
   theme_classic()+
   scale_fill_gradient("Period", low = "blue", high= "red")
 s
+ggsave("By only cotinine.jpg",  dpi= 300)
 kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT,as.factor(Period))
 table1(~NICabs_COT|Period, data= WBE)
@@ -148,6 +163,7 @@ z= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT.HCOT, fill=Period))+
   theme_classic()+
    scale_fill_gradient("Period", low = "blue", high= "red")
 z
+ggsave("By both metabolites.jpg",  dpi= 300)
 kruskal.test(NICabs_COT.HCOT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT.HCOT,as.factor(Period))
 table1(~NICabs_COT.HCOT|Period, data= WBE)
