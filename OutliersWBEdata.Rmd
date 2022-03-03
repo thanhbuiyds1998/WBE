@@ -16,6 +16,7 @@ require(table1)
 library(car)
 library(mice); library(VIM)
 require(pgirmess)
+
 ```
 #Input data
 ```{r}
