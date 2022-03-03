@@ -48,14 +48,15 @@ WBE= WBE%>%
   mutate(Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
 wilcox.test(WBE$NICabs_COT,WBE$NICabs_COT.HCOT)
 cor.test(WBE$NICabs_COT, WBE$NICabs_COT.HCOT, method = "pearson") #examine correlation in nicotine consumption by two methods
+
 ```
 **Massload of metabolite and NIC/COT ratio**
 ```{r}
 WBE = WBE %>% 
-  mutate(NICavg= (NIC1*80000+NIC2*85000)/165000)%>%
+  #mutate(NICavg= (NIC1*80000+NIC2*85000)/165000)%>%
   mutate(COTavg= (COT1*80000+COT2*85000)/165000)%>%
-  mutate(HCOTavg= (HCOT1*80000+HCOT2*85000)/165000)%>%
-  mutate(NIC.COT= NICavg/COTavg)%>%
+  #mutate(HCOTavg= (HCOT1*80000+HCOT2*85000)/165000)%>%
+  #mutate(NIC.COT= NICavg/COTavg)%>%
   mutate(NIC1.COT1= NIC1/COT1)%>% 
   mutate(NIC2.COT2= NIC2/COT2)%>%
   mutate(COTmass= COTavg*165000/(830000*R15))%>%
@@ -63,7 +64,7 @@ WBE = WBE %>%
   mutate(ACEmass= (ACE1*80000+ ACE2*85000)/(830000))
 attach(WBE)
 #Calculate by divide average amount of NIC and COT
-table1(~NIC.COT|Period, data = WBE)
+#table1(~NIC.COT|Period, data = WBE)
 #Calculate NIT/COT ratio by divide NIC by COT in each place
 NIC.COT12= data.frame(Period, NIC1.COT1,NIC2.COT2)
 NIC.COT123 = gather(NIC.COT12, key = "Location", value ="NIC.COTs", c(NIC1.COT1,NIC2.COT2))
