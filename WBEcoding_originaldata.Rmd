@@ -48,7 +48,6 @@ WBE= WBE%>%
   mutate(Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
 wilcox.test(WBE$NICabs_COT,WBE$NICabs_COT.HCOT)
 cor.test(WBE$NICabs_COT, WBE$NICabs_COT.HCOT, method = "pearson") #examine correlation in nicotine consumption by two methods
-
 ```
 **Massload of metabolite and NIC/COT ratio**
 ```{r}
