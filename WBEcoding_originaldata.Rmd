@@ -25,12 +25,16 @@ library(car)
 require(pgirmess)
 require(patchwork)
 library(mice); library(VIM)
+library(compareGroups)
 ```
 #Input data
 ```{r}
 setwd("E:/WBE")
 WBE = read.csv("Data_nicotine_ace_para.csv",header=T,na.strings = ".")
-WBE$Date= mdy(WBE$Date)
+WBE= WBE%>%
+  mutate(Date= mdy(Date),
+         Period= as.factor(Period))
+         
 attach(WBE)
 ```
 #Imputation
@@ -54,29 +58,118 @@ WBE= WBE%>%
 ```
 **Compare mass load in the 2 sites**
 ```{r}
-WBE= WBE%>%
-  mutate(NIC1load=NIC1*80000/400000)%>%
-  mutate(COT1load=COT1*80000/400000)%>%
-  mutate(HCOT1load=HCOT1*80000/400000)%>%
-  mutate(ACE1load=ACE1*80000/400000)%>%
-  mutate(PARA1load=PARA1*80000/400000)%>%
-  mutate(NIC2load=NIC2*85000/430000)%>%
-  mutate(COT2load=COT2*85000/430000)%>%
-  mutate(HCOT2load=HCOT2*85000/430000)%>%
-  mutate(ACE2load=ACE2*85000/430000)%>%
-  mutate(PARA2load=PARA2*85000/430000)
-table1(~NIC1load+NIC2load+COT1load+COT2load+HCOT1load+HCOT2load+ACE1load+ACE2load+ PARA1load+PARA2load, data= WBE)
-attach(WBE)
+WBEload= WBE%>%
+  mutate(NIC1load=NIC1*80000/400000,
+         COT1load=COT1*80000/400000,
+         HCOT1load=HCOT1*80000/400000,
+         ACE1load=ACE1*80000/400000,
+         PARA1load=PARA1*80000/400000,
+         NIC2load=NIC2*85000/430000,
+         COT2load=COT2*85000/430000,
+         HCOT2load=HCOT2*85000/430000,
+         ACE2load=ACE2*85000/430000,
+         PARA2load=PARA2*85000/430000)%>%
+  select(Period,NIC1load:PARA2load)
+table1(~NIC1load+NIC2load+COT1load+COT2load+HCOT1load+HCOT2load+ACE1load+ACE2load+ PARA1load+PARA2load, data= WBEload)
+attach(WBEload)
 wilcox.test(NIC1load, NIC2load)
 wilcox.test(COT1load, COT2load)
 wilcox.test(HCOT1load, HCOT2load)
 wilcox.test(ACE1load, ACE2load)
 wilcox.test(PARA1load, PARA2load)
 ```
+*Compare consumption in two sites over 3 period*
+```{r}
+#Nicotine
+NICconsumption = WBEload%>%
+  select(Period,COT1load,COT2load)%>%
+  rename("Site 1"= COT1load, "Site 2"= COT2load)%>%
+  gather(Location,Load,-Period)%>%
+  mutate(Use= Load*3.04)
+
+a= ggplot(NICconsumption,aes(x= Period,y= Use, fill= Location))+ geom_boxplot()+
+  labs(y="Nicotine consumption (mg/day/person)",x= "Period")+
+  theme_bw()+
+  theme_classic()+
+  geom_hline(aes(yintercept = mean(Use)), color="brown")+
+  #easy_legend_at("bottom")+
+  easy_remove_legend()
+##Period 1
+NICcon1 = NICconsumption %>%
+  filter(Period == 1)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=NICcon1))
+##Period 2
+NICcon2 = NICconsumption %>%
+  filter(Period == 2)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=NICcon2))
+##Period 3
+NICcon3 = NICconsumption %>%
+  filter(Period == 3)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=NICcon3))
+
+
+#Acesulfame
+ACEconsumption = WBEload%>%
+  select(Period,ACE1load,ACE2load)%>%
+  rename("Site 1"= ACE1load, "Site 2"= ACE2load)%>%
+  gather(Location,Load,-Period)%>%
+  mutate(Use= Load*1)
+b= ggplot(ACEconsumption,aes(x= Period,y= Use, fill= Location))+ geom_boxplot()+
+  labs(y="Acesulfame consumption (mg/day/person)",x= "Period")+
+  theme_bw()+
+  theme_classic()+
+  geom_hline(aes(yintercept = mean(Use)), color="brown")+
+  easy_legend_at("bottom")+
+  easy_remove_legend_title()
+##Period 1
+ACEcon1 = ACEconsumption %>%
+  filter(Period == 1)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=ACEcon1))
+##Period 2
+ACEcon2 = ACEconsumption %>%
+  filter(Period == 2)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=ACEcon2))
+##Period 3
+ACEcon3 = ACEconsumption %>%
+  filter(Period == 3)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=ACEcon3))
+
+#Paracetamol
+PARAconsumption = WBEload%>%
+  select(Period,PARA1load,PARA2load)%>%
+  rename("Site 1"= PARA1load, "Site 2"= PARA2load)%>%
+  gather(Location,Load,-Period)%>%
+  mutate(Use= Load*2.1)
+c= ggplot(PARAconsumption,aes(x= Period,y= Use, fill= Location))+ geom_boxplot()+
+  labs(y="Paracetamol consumption (mg/day/person)",x= "Period")+
+  theme_bw()+
+  theme_classic()+
+  geom_hline(aes(yintercept = mean(Use)), color="brown")+
+  #easy_legend_at("bottom")+
+  easy_remove_legend()
+##Period 1
+PARAcon1 = PARAconsumption %>%
+  filter(Period == 1)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=PARAcon1))
+##Period 2
+PARAcon2 = PARAconsumption %>%
+  filter(Period == 2)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=PARAcon2))
+##Period 3
+PARAcon3 = PARAconsumption %>%
+  filter(Period == 3)
+createTable(compareGroups(Location~Use, method= c(Use=2),data=PARAcon3))
+
+
+a+b+c
+ggsave("consumption_in_3_periods.jpg", dpi=300)
+```
+
 
 **Concentration of metabolites detected over 3 periods**
 ```{r}
-metabolites=data.frame(NIC1,NIC2,COT1,COT2,HCOT1,HCOT2,ACE1,ACE2,PARA1,PARA2)%>%
+metabolites=WBE%>%
+  select(NIC1,NIC2,COT1,COT2,HCOT1,HCOT2,ACE1,ACE2,PARA1,PARA2)%>%
   gather("Biomarker", "Amount",c(NIC1,NIC2,COT1,COT2,HCOT1,HCOT2,ACE1,ACE2,PARA1,PARA2))
 table1(~NIC1+NIC2+COT1+COT2+HCOT1+HCOT2+ACE1+ACE2+PARA1+PARA2|Period,data = metabolites)
 ```
@@ -88,11 +181,11 @@ WBE = WBE %>%
   #mutate(NICavg= (NIC1*80000+NIC2*85000)/165000)%>%
   mutate(COTavg= (COT1*80000+COT2*85000)/165000)%>%
   #mutate(HCOTavg= (HCOT1*80000+HCOT2*85000)/165000)%>%
-  mutate(NIC1.COT1= NIC1/COT1)%>% 
-  mutate(NIC2.COT2= NIC2/COT2)%>%
-  mutate(COTmass= COTavg*165000/(830000*R15))%>%
-  mutate(PARAmass= (PARA1*80000+ PARA2*85000)/(830000))%>%
-  mutate(ACEmass= (ACE1*80000+ ACE2*85000)/(830000))
+  mutate(NIC1.COT1= NIC1/COT1,
+         NIC2.COT2= NIC2/COT2,
+         COTmass= COTavg*165000/(830000*R15),
+         PARAmass= (PARA1*80000+ PARA2*85000)/(830000),
+         ACEmass= (ACE1*80000+ ACE2*85000)/(830000))
 attach(WBE)
 
 #Calculate NIT/COT ratio by divide NIC by COT in each place
@@ -162,13 +255,11 @@ s= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
   geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person)",x=NULL)+
   theme_bw()+
   theme_classic()+
-  scale_fill_gradient("Period", low = "blue", high= "red")+
   geom_hline(aes(yintercept = mean(NICabs_COT)), color="brown") +
-  easy_center_title()+ 
   easy_remove_legend()+
   easy_remove_legend_title()
 s
-ggsave("By only cotinine.jpg",  dpi= 300)
+ggsave("Nicotine consumption.jpg",  dpi= 300)
 kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT,as.factor(Period))
 table1(~NICabs_COT|Period, data= WBE)
@@ -180,8 +271,7 @@ t= ggplot(WBE,aes(x= as.factor(Period),y=Acesulfame, fill=Period))+
   geom_boxplot()+ labs(y="Acesulfame consumption (mg/day/person)",x=NULL)+ 
   theme_bw()+
   theme_classic()+
-  scale_fill_gradient("Period", low = "green", high= "red")+
-  geom_hline(aes(yintercept = mean(Acesulfame)), color="blue") +
+  geom_hline(aes(yintercept = mean(Acesulfame)), color="brown") +
   easy_remove_legend()+
   easy_remove_legend_title()
 t
@@ -194,8 +284,7 @@ u= ggplot(WBE,aes(x= as.factor(Period),y=Paracetamol, fill=Period))+
   geom_boxplot()+ labs(y="Paracetamol consumption (mg/day/person)",x=NULL)+ 
   theme_bw()+
   theme_classic()+
-  scale_fill_gradient("Period", low = "green", high= "red")+
-  geom_hline(aes(yintercept = mean(Paracetamol)), color="blue") +
+  geom_hline(aes(yintercept = mean(Paracetamol)), color="brown") +
   easy_remove_legend()+
   easy_remove_legend_title()
 u
