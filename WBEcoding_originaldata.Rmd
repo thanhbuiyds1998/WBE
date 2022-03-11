@@ -119,8 +119,8 @@ b= ggplot(ACEconsumption,aes(x= Period,y= Use, fill= Location))+ geom_boxplot()+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(Use)), color="brown")+
-  easy_legend_at("bottom")+
-  easy_remove_legend_title()
+  #easy_legend_at("right")+
+  easy_remove_legend()
 ##Period 1
 ACEcon1 = ACEconsumption %>%
   filter(Period == 1)
@@ -145,8 +145,8 @@ c= ggplot(PARAconsumption,aes(x= Period,y= Use, fill= Location))+ geom_boxplot()
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(Use)), color="brown")+
-  #easy_legend_at("bottom")+
-  easy_remove_legend()
+  easy_legend_at("right")+
+  easy_remove_legend_title()
 ##Period 1
 PARAcon1 = PARAconsumption %>%
   filter(Period == 1)
