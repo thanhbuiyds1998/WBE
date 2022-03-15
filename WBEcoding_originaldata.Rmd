@@ -49,17 +49,9 @@ WBE = complete(mWBE, action=1)
 R15 =6029878/8053663 #Population aged 15+
 
 WBE= WBE%>%
-  mutate(Weekday= wday(Date,label=T,abbr = T))%>%
-  mutate(Weekday= factor(Weekday,levels=c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")))%>%
-  mutate(NICabs_COT =((COT1*80000+COT2*85000)*3.04)/(400000+430000))%>%
-  mutate(Tobacco_COT = NICabs_COT/(0.172*0.9*R15*0.66))%>%
-  mutate(Acesulfame = 1*(ACE1*80000 + ACE2*85000)/(400000+430000))%>%
-  mutate(Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
-```
-**Compare mass load in the 2 sites**
-```{r}
-WBEload= WBE%>%
-  mutate(NIC1load=NIC1*80000/400000,
+  mutate(Weekday= wday(Date,label=T,abbr = T),
+         Weekday= factor(Weekday,levels=c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")),
+         NIC1load=NIC1*80000/400000,
          COT1load=COT1*80000/400000,
          HCOT1load=HCOT1*80000/400000,
          ACE1load=ACE1*80000/400000,
@@ -68,7 +60,20 @@ WBEload= WBE%>%
          COT2load=COT2*85000/430000,
          HCOT2load=HCOT2*85000/430000,
          ACE2load=ACE2*85000/430000,
-         PARA2load=PARA2*85000/430000)%>%
+         PARA2load=PARA2*85000/430000,
+         COTmassavg= (COT1load+COT2load)/2,
+         COTmassavg15= (COT1load+COT2load)/(2*R15),
+         ACEmassavg= (ACE1load+ACE2load)/2,
+         PARAmassavg= (PARA1load+PARA2load)/2,
+         NICabs_COT= COTmassavg*3.04,
+         Tobacco_COT = NICabs_COT/(0.172*0.9*0.66*R15),
+         Acesulfame = 1*(ACE1*80000 + ACE2*85000)/(400000+430000),
+         Paracetamol = 2*(PARA1*80000 + PARA2*85000)/(400000+430000))
+table1(~COTmassavg15+ACEmassavg+PARAmassavg+ NICabs_COT|Period, data= WBE)
+```
+**Compare mass load in the 2 sites**
+```{r}
+WBEload= WBE%>%
   select(Period,NIC1load:PARA2load)
 table1(~NIC1load+NIC2load+COT1load+COT2load+HCOT1load+HCOT2load+ACE1load+ACE2load+ PARA1load+PARA2load, data= WBEload)
 attach(WBEload)
