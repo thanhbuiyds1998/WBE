@@ -68,6 +68,12 @@ WBE= WBE%>%
          NICabs_COT= COTmassavg*2.85,
          Tobacco_COT = NICabs_COT/(0.172*0.9*R15))
 ```
+*Compare concentrations over 3 periods*
+```{r}
+table1(~NIC1+NIC2+COT1+COT2+HCOT1+HCOT2+ACE1+ACE2+ PARA1+PARA2|Period, data= WBE)
+```
+
+
 **Compare mass load in the 2 sites**
 ```{r}
 WBEload= WBE%>%
