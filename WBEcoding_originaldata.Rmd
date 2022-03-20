@@ -62,11 +62,11 @@ WBE= WBE%>%
          ACE2load=ACE2*85000/430000,
          PARA2load=PARA2*85000/430000,
          COTmassavg= (COT1load+COT2load)/2,
-         COTmassavg15= (COT1load+COT2load)/(2*R15),
+         #COTmassavg15= (COT1load+COT2load)/(2*R15),
          ACEmassavg= (ACE1load+ACE2load)/2,
          PARAmassavg= (PARA1load+PARA2load)/2,
-         NICabs_COT= COTmassavg15*2.85,
-         Tobacco_COT = NICabs_COT/(0.172*0.9))
+         NICabs_COT= COTmassavg*2.85,
+         Tobacco_COT = NICabs_COT/(0.172*0.9*R15))
 ```
 **Compare mass load in the 2 sites**
 ```{r}
@@ -83,7 +83,7 @@ wilcox.test(PARA1load, PARA2load)
 **Compare average massload in 3 period and tobacco consumption**
 ```{r}
 attach(WBE)
-table1(~COTmassavg15+ACEmassavg+PARAmassavg+ NICabs_COT+Tobacco_COT|Period, data= WBE)
+table1(~COTmassavg+ACEmassavg+PARAmassavg+ NICabs_COT+Tobacco_COT|Period, data= WBE)
 #Nicotine
 s= ggplot(WBE,aes(x= as.factor(Period),y=COTmassavg, fill=Period))+
   geom_boxplot()+ labs(y="Mass load of cotinine (mg/day/person)",x="Period")+
@@ -247,18 +247,17 @@ kruskalmc(PARA.ACE$PARA.ACEs,PARA.ACE$Period)
 #Weekly variation
 ```{r}
 #Nicotine
-m=ggplot(WBE, aes(x=Weekday, y= NICabs_COT, fill=Weekday))+ geom_boxplot() + labs(y="Nicotine consumption (mg/day/person)",x=NULL)+
-  #ggtitle("Nicotine consumption by cotinine")+
-  geom_hline(aes(yintercept = mean(NICabs_COT)), color="red") +
+m=ggplot(WBE, aes(x=Weekday, y= NICabs_COT, fill= "pink"))+ geom_boxplot() + labs(y="Nicotine consumption (mg/day/person)",x=NULL)+
+  geom_hline(aes(yintercept = mean(NICabs_COT)), color="blue") +
   theme_bw()+
-  theme_classic()+ 
-  #easy_center_title()+
+  theme_classic()+
   easy_remove_legend()
   
 m
 
 kruskal.test(NICabs_COT~Weekday, data=WBE)
 table1(~NICabs_COT+ Tobacco_COT|Weekday, data = WBE)
+ggsave("Weekly_nicotine_use.jpg", dpi=300)
 ```
 
 #Between periods
@@ -272,7 +271,7 @@ n= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
   geom_hline(aes(yintercept = mean(NICabs_COT)), color="brown") +
   easy_remove_legend()+
   easy_remove_legend_title()
-s
+n
 ggsave("Nicotine consumption.jpg",  dpi= 300)
 kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT,as.factor(Period))
