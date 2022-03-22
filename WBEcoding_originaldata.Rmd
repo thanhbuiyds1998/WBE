@@ -134,7 +134,7 @@ ggsave("massload_in_3_periods.jpg", dpi=300)
 *Compare mass load between two sites over 3 period*
 ```{r}
 #Nicotine
-NICmassload = WBEload%>%
+NICmassload = WBE%>%
   select(Period,COT1load,COT2load)%>%
   rename("Site 1"= COT1load, "Site 2"= COT2load)%>%
   gather(Location,Load,-Period)
@@ -160,7 +160,7 @@ createTable(compareGroups(Location~Load, method= c(Load=2),data=NICcon3))
 
 
 #Acesulfame
-ACEmassload = WBEload%>%
+ACEmassload = WBE%>%
   select(Period,ACE1load,ACE2load)%>%
   rename("Site 1"= ACE1load, "Site 2"= ACE2load)%>%
   gather(Location,Load,-Period)
@@ -184,7 +184,7 @@ ACEcon3 = ACEmassload %>%
 createTable(compareGroups(Location~Load, method= c(Load=2),data=ACEcon3))
 
 #Paracetamol
-PARAmassload = WBEload%>%
+PARAmassload = WBE%>%
   select(Period,PARA1load,PARA2load)%>%
   rename("Site 1"= PARA1load, "Site 2"= PARA2load)%>%
   gather(Location,Load,-Period)
@@ -246,6 +246,14 @@ PARA.ACE = WBE%>%
 table1(~PARA.ACEs|Period, data = PARA.ACE)
 kruskal.test(PARA.ACEs~Period, data = PARA.ACE)
 kruskalmc(PARA.ACE$PARA.ACEs,PARA.ACE$Period)
+ggplot(PARA.ACE, aes(x= Period, y= PARA.ACEs, fill= Period))+
+  labs(y= "PARA/ACE ratio", x= "Sampling Period")+
+  geom_boxplot()+
+  theme_bw()+
+  theme_classic()+
+  easy_legend_at("bottom")
+ggsave("PARA.ACE_ratio.jpg",dpi = 300)
+
 ```
 
 
