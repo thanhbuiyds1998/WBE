@@ -71,6 +71,16 @@ WBE= WBE%>%
 *Compare concentrations over 3 periods*
 ```{r}
 table1(~NIC1+NIC2+COT1+COT2+HCOT1+HCOT2+ACE1+ACE2+ PARA1+PARA2|Period, data= WBE)
+ACEavg = WBE%>%
+  select(Period,ACE1,ACE2)%>%
+  rename("Site 1"= ACE1, "Site 2"= ACE2)%>%
+  gather(Location,ACE,-Period)
+table1(~ACE, data= ACEavg)
+PARAavg = WBE%>%
+  select(Period,PARA1,PARA2)%>%
+  rename("Site 1"= PARA1, "Site 2"= PARA2)%>%
+  gather(Location,PARA,-Period)
+table1(~PARA, data= PARAavg)
 ```
 
 
@@ -226,6 +236,11 @@ ace = WBE%>%
   select(ACE1,ACE2, Period)%>%
   gather("Ace","Amount",-Period)
 table1(~Amount|Period,data = ace)
+
+para = WBE%>%
+  select(PARA1,PARA2, Period)%>%
+  gather("PARA","Amount",-Period)
+table1(~Amount|Period,data = para)
 ```
 
 
@@ -237,6 +252,21 @@ NIC.COT12 = WBE %>%
   select(Period, NIC1.COT1,NIC2.COT2)%>%
   gather(key = "Location", value ="NIC.COTs", c(NIC1.COT1,NIC2.COT2))
 table1(~NIC.COTs|Period, data = NIC.COT12)
+
+COT.ACE = WBE%>%
+  mutate(COT.ACE1=COT1/ACE1,
+         COT.ACE2=COT2/ACE2)%>%
+  select(Period,COT.ACE1,COT.ACE2)%>%
+  gather(key = "Location", value ="COT.ACEs", -Period)
+table1(~COT.ACEs|Period, data = COT.ACE)
+kruskal.test(COT.ACEs~Period, data = COT.ACE)
+kruskalmc(COT.ACE$COT.ACEs,COT.ACE$Period)
+ggplot(COT.ACE, aes(x= Period, y= COT.ACEs, fill= Period))+
+  labs(y= "COT/ACE ratio", x= "Sampling Period")+
+  geom_boxplot()+
+  theme_bw()+
+  theme_classic()+
+  easy_legend_at("bottom")
 
 PARA.ACE = WBE%>%
   mutate(PARA.ACE1=PARA1/ACE1,
