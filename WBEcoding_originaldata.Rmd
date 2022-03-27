@@ -26,7 +26,17 @@ require(pgirmess)
 require(patchwork)
 library(mice); library(VIM)
 library(compareGroups)
+library(showtext)   # For changing fonts in a ggplot
 ```
+*Add font*
+```{r}
+# Add Calibri and Comic Sans MS fonts to R
+font_add(family = "Times New Roman", regular = "TIMES.ttf")
+# Enable showtext (using default options)
+showtext_opts(dpi = 300)
+```
+
+
 #Input data
 ```{r}
 setwd("E:/WBE")
@@ -105,7 +115,9 @@ s= ggplot(WBE,aes(x= as.factor(Period),y=COTmassavg, fill=Period))+
   geom_boxplot()+ labs(y="Mass load of cotinine (mg/day/person)",x="Period")+
   theme_bw()+
   theme_classic()+
+  theme(text = element_text(family = "Times New Roman")) +
   geom_hline(aes(yintercept = mean(COTmassavg)), color="brown") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.8))+
   easy_remove_legend()+
   easy_remove_legend_title()
 s
@@ -120,6 +132,8 @@ t= ggplot(WBE,aes(x= as.factor(Period),y=ACEmassavg, fill=Period))+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(ACEmassavg)), color="brown") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
   easy_remove_legend_title()
 t
@@ -132,6 +146,8 @@ u= ggplot(WBE,aes(x= as.factor(Period),y=PARAmassavg, fill=Period))+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(PARAmassavg)), color="brown") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 6))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
   easy_remove_legend_title()
 u
@@ -154,6 +170,9 @@ a= ggplot(NICmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.8))+
+  #theme(text = element_text(size = 32))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()
 ##Period 1
 NICcon1 = NICmassload %>%
@@ -179,6 +198,9 @@ b= ggplot(ACEmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  #theme(text = element_text(size = 32))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()
 ##Period 1
 ACEcon1 = ACEmassload %>%
@@ -199,10 +221,13 @@ PARAmassload = WBE%>%
   rename("Site 1"= PARA1load, "Site 2"= PARA2load)%>%
   gather(Location,Load,-Period)
 c= ggplot(PARAmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
-  labs(y="Massload of paracetamol (mg/day/person)",x= "Period")+
+  labs(y="Mass load of paracetamol (mg/day/person)",x= "Period")+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 6))+
+  #theme(text = element_text(size = 32))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_legend_at("right")+
   easy_remove_legend_title()
 ##Period 1
@@ -221,6 +246,17 @@ createTable(compareGroups(Location~Load, method= c(Load=2),data=PARAcon3))
 
 a+b+c
 ggsave("massload_2sites_in_3_periods.jpg", dpi=300)
+```
+**Compare 3 mass loads for period 1**
+*Period 1*
+```{r}
+
+kruskal.test(COT1load~Period,data=WBE)
+kruskalmc(COT1load,Period)
+kruskal.test(ACE1load~Period,data=WBE)
+kruskalmc(ACE1load,Period)
+kruskal.test(PARA1load~Period,data=WBE)
+kruskalmc(PARA1load,Period)
 ```
 
 
@@ -266,6 +302,7 @@ ggplot(COT.ACE, aes(x= Period, y= COT.ACEs, fill= Period))+
   geom_boxplot()+
   theme_bw()+
   theme_classic()+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.2))+
   easy_legend_at("bottom")
 
 PARA.ACE = WBE%>%
@@ -281,6 +318,7 @@ ggplot(PARA.ACE, aes(x= Period, y= PARA.ACEs, fill= Period))+
   geom_boxplot()+
   theme_bw()+
   theme_classic()+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 3))+
   easy_legend_at("bottom")
 ggsave("PARA.ACE_ratio.jpg",dpi = 300)
 
@@ -295,6 +333,8 @@ m=ggplot(WBE, aes(x=Weekday, y= NICabs_COT, fill= "pink"))+ geom_boxplot() + lab
   geom_hline(aes(yintercept = mean(NICabs_COT)), color="blue") +
   theme_bw()+
   theme_classic()+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 2))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()
   
 m
@@ -313,6 +353,8 @@ n= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
   theme_bw()+
   theme_classic()+
   geom_hline(aes(yintercept = mean(NICabs_COT)), color="brown") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 2))+
+  theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
   easy_remove_legend_title()
 n
@@ -320,7 +362,6 @@ ggsave("Nicotine consumption.jpg",  dpi= 300)
 kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT,as.factor(Period))
 table1(~NICabs_COT|Period, data= WBE)
-
 ```
 
 
