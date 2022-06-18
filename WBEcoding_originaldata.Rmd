@@ -45,7 +45,6 @@ WBE= WBE%>%
   mutate(Date= mdy(Date),
          Period= as.factor(Period))
          
-attach(WBE)
 ```
 #Imputation
 ```{r}
@@ -72,12 +71,291 @@ WBE= WBE%>%
          ACE2load=ACE2*85000/430000,
          PARA2load=PARA2*85000/430000,
          COTmassavg= (COT1load+COT2load)/2,
-         #COTmassavg15= (COT1load+COT2load)/(2*R15),
+         HCOTmassavg= (HCOT1load+HCOT2load)/2,
          ACEmassavg= (ACE1load+ACE2load)/2,
          PARAmassavg= (PARA1load+PARA2load)/2,
-         NICabs_COT= COTmassavg*2.85,
-         Tobacco_COT = NICabs_COT/(0.172*0.9*R15))
+         NICabs_COT= COTmassavg*2.96,
+         #NICabs_COT1= (COTmassavg*3.13+ HCOTmassavg*2.31)/2,
+         Tobacco_COT = NICabs_COT/(0.172*1.05*R15))
+
+summary(WBE$Tobacco_COT)
+table1(~Tobacco_COT + COTmassavg + ACEmassavg+ PARAmassavg|Period, data=WBE)
+
 ```
+*Time series of metabolites*
+```{r}
+WBE1=WBE%>%filter(Period==1)
+WBE2=WBE%>%filter(Period==2)
+WBE3=WBE%>%filter(Period==3)
+library(scales)
+#Between COT and HCOT
+COT.HCOT1= WBE1%>% select(Date,COT1,HCOT1)%>%
+  rename("3-hydroxycotinine"= "HCOT1", "Cotinine"= "COT1")%>%
+                    gather(Met, Value, -Date)
+COT.HCOT2= WBE2%>% select(Date,COT1,HCOT1)%>%
+  rename("3-hydroxycotinine"= "HCOT1", "Cotinine"= "COT1")%>%
+                    gather(Met, Value, -Date)
+COT.HCOT3= WBE3%>% select(Date,COT1,HCOT1)%>%
+  rename("3-hydroxycotinine"= "HCOT1", "Cotinine"= "COT1")%>%
+                    gather(Met, Value, -Date)
+a=ggplot(COT.HCOT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(16,18))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+
+b=ggplot(COT.HCOT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  ggtitle("Site 1")+
+  scale_shape_manual(values = c(16,18))+
+  labs(y="",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ easy_center_title()+
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+c=ggplot(COT.HCOT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(16,18))+
+  labs(y="",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+
+
+#Site 2
+COT.HCOT1= WBE1%>% select(Date,COT2,HCOT2)%>%
+  gather(Met, Value, -Date)
+COT.HCOT2= WBE2%>% select(Date,COT2,HCOT2)%>%
+  gather(Met, Value, -Date)
+COT.HCOT3= WBE3%>% select(Date,COT2,HCOT2)%>%
+  gather(Met, Value, -Date)
+d=ggplot(COT.HCOT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(16,18))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+
+e=ggplot(COT.HCOT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) +
+  ggtitle("Site 2")+
+  scale_shape_manual(values = c(16,18))+
+  labs(y="",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ easy_center_title()+
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+f=ggplot(COT.HCOT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(16,18))+
+  labs(y="",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+
+Site1=a+b+c
+Site2=d+e+f
+ggarrange(Site1, Site2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1,
+          common.legend = TRUE, legend = "bottom")
+ggsave("Cotinine and 3-hydroxycotinine.tiff", width= 10, height =5,dpi=300)
+
+
+
+#PARA, ACE
+##Site 1
+PARA.ACE.COT1= WBE1%>% select(Date,PARA1,ACE1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1")%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT2= WBE2%>% select(Date,PARA1,ACE1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1")%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT3= WBE3%>% select(Date,PARA1,ACE1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1")%>%
+  gather(Met, Value, -Date)
+l=ggplot(PARA.ACE.COT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+m=ggplot(PARA.ACE.COT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  ggtitle("Site 1")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+
+  easy_remove_y_axis()+easy_center_title()
+n= ggplot(PARA.ACE.COT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+
+
+##Site 2
+PARA.ACE.COT1= WBE1%>% select(Date,PARA2,ACE2)%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT2= WBE2%>% select(Date,PARA2,ACE2)%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT3= WBE3%>% select(Date,PARA2,ACE2)%>%
+  gather(Met, Value, -Date)
+o=ggplot(PARA.ACE.COT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+p=ggplot(PARA.ACE.COT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  ggtitle("Site 2")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+
+  easy_remove_y_axis()+ easy_center_title()
+q= ggplot(PARA.ACE.COT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()+
+  easy_remove_legend_title()
+site_1= l+m+n
+site_2= o+p+q
+library(ggpubr)
+ggarrange(site_1, site_2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1,
+          common.legend = TRUE, legend = "bottom")
+ggsave("Acesulfame and Paracetamol.tiff", width=10, height=5, dpi=300)
+
+#PARA, ACE, COT
+##Site 1
+PARA.ACE.COT1= WBE1%>% select(Date,PARA1,ACE1,COT1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1", "Cotinine"= "COT1")%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT2= WBE2%>% select(Date,PARA1,ACE1,COT1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1", "Cotinine"= "COT1")%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT3= WBE3%>% select(Date,PARA1,ACE1,COT1)%>%
+  rename("Paracetamol"="PARA1", "Acesulfame"= "ACE1", "Cotinine"= "COT1")%>%
+  gather(Met, Value, -Date)
+l=ggplot(PARA.ACE.COT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+m=ggplot(PARA.ACE.COT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  ggtitle("Site 1")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+
+  easy_remove_y_axis()+easy_center_title()
+n= ggplot(PARA.ACE.COT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+                 color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()
+
+
+##Site 2
+PARA.ACE.COT1= WBE1%>% select(Date,PARA2,ACE2,COT2)%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT2= WBE2%>% select(Date,PARA2,ACE2,COT2)%>%
+  gather(Met, Value, -Date)
+PARA.ACE.COT3= WBE3%>% select(Date,PARA2,ACE2,COT2)%>%
+  gather(Met, Value, -Date)
+o=ggplot(PARA.ACE.COT1,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+    color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")
+p=ggplot(PARA.ACE.COT2,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+    color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  ggtitle("Site 2")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_remove_legend()+ easy_rotate_x_labels(angle=45, side = "right")+
+  easy_remove_y_axis()+ easy_center_title()
+q= ggplot(PARA.ACE.COT3,aes(x=Date,y=Value))+ 
+  geom_point(aes(shape = Met, 
+    color = Met)) + 
+  scale_shape_manual(values = c(15, 16,17))+
+  labs(y="Concentration (µg/L)",x= "")+
+  scale_x_date(breaks = "7 days", date_labels = "%d/%m/%y")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  theme_bw()+ theme_classic()+ 
+  easy_rotate_x_labels(angle=45, side = "right")+ easy_remove_y_axis()+
+  easy_remove_legend_title()
+site_1= l+m+n
+site_2= o+p+q
+library(ggpubr)
+ggarrange(site_1, site_2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1,
+          common.legend = TRUE, legend = "bottom")
+
+ggsave("Three metabolites.tiff", width=10, height =5, dpi=300)
+```
+
+
+
 *Compare concentrations over 3 periods*
 ```{r}
 table1(~NIC1+NIC2+COT1+COT2+HCOT1+HCOT2+ACE1+ACE2+ PARA1+PARA2|Period, data= WBE)
@@ -116,7 +394,7 @@ s= ggplot(WBE,aes(x= as.factor(Period),y=COTmassavg, fill=Period))+
   theme_bw()+
   theme_classic()+
   theme(text = element_text(family = "Times New Roman")) +
-  geom_hline(aes(yintercept = mean(COTmassavg)), color="brown") +
+  #geom_hline(aes(yintercept = mean(COTmassavg)), color="brown") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 0.8))+
   easy_remove_legend()+
   easy_remove_legend_title()
@@ -131,7 +409,7 @@ t= ggplot(WBE,aes(x= as.factor(Period),y=ACEmassavg, fill=Period))+
   geom_boxplot()+ labs(y="Mass load of acesulfame (mg/day/person)",x="Period")+ 
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(ACEmassavg)), color="brown") +
+  #geom_hline(aes(yintercept = mean(ACEmassavg)), color="brown") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
   theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
@@ -145,7 +423,7 @@ u= ggplot(WBE,aes(x= as.factor(Period),y=PARAmassavg, fill=Period))+
   geom_boxplot()+ labs(y="Mass load of paracetamol (mg/day/person)",x= "Period")+ 
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(PARAmassavg)), color="brown") +
+  #geom_hline(aes(yintercept = mean(PARAmassavg)), color="brown") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 6))+
   theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
@@ -153,9 +431,11 @@ u= ggplot(WBE,aes(x= as.factor(Period),y=PARAmassavg, fill=Period))+
 u
 kruskal.test(PARAmassavg~as.factor(Period),data=WBE)
 kruskalmc(PARAmassavg,as.factor(Period))
+library(asbio)
+pairw.kw(PARAmassavg, as.factor(Period), conf= .95)
 
 s+t+u
-ggsave("massload_in_3_periods.jpg", dpi=300)
+ggsave("massload_in_3_periods.tiff", dpi=500)
 ```
 *Compare mass load between two sites over 3 period*
 ```{r}
@@ -169,7 +449,7 @@ a= ggplot(NICmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
   labs(y="Mass load of cotinine (mg/day/person)",x= "Period")+
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  #geom_hline(aes(yintercept = mean(Load)), color="brown")+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 0.8))+
   #theme(text = element_text(size = 32))+
   theme(text = element_text(family = "Times New Roman")) +
@@ -197,7 +477,7 @@ b= ggplot(ACEmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
   labs(y="Mass load of acesulfame (mg/day/person)",x= "Period")+
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  #geom_hline(aes(yintercept = mean(Load)), color="brown")+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 5))+
   #theme(text = element_text(size = 32))+
   theme(text = element_text(family = "Times New Roman")) +
@@ -224,7 +504,7 @@ c= ggplot(PARAmassload,aes(x= Period,y= Load, fill= Location))+ geom_boxplot()+
   labs(y="Mass load of paracetamol (mg/day/person)",x= "Period")+
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(Load)), color="brown")+
+  #geom_hline(aes(yintercept = mean(Load)), color="brown")+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 6))+
   #theme(text = element_text(size = 32))+
   theme(text = element_text(family = "Times New Roman")) +
@@ -245,7 +525,7 @@ createTable(compareGroups(Location~Load, method= c(Load=2),data=PARAcon3))
 
 
 a+b+c
-ggsave("massload_2sites_in_3_periods.jpg", dpi=300)
+ggsave("massload_2sites_in_3_periods.tiff", dpi=500)
 ```
 **Compare 3 mass loads for period 1**
 *Period 1*
@@ -320,7 +600,7 @@ ggplot(PARA.ACE, aes(x= Period, y= PARA.ACEs, fill= Period))+
   theme_classic()+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 3))+
   easy_legend_at("bottom")
-ggsave("PARA.ACE_ratio.jpg",dpi = 300)
+ggsave("PARA.ACE_ratio.tiff",dpi = 500)
 
 ```
 
@@ -330,7 +610,7 @@ ggsave("PARA.ACE_ratio.jpg",dpi = 300)
 ```{r}
 #Nicotine
 m=ggplot(WBE, aes(x=Weekday, y= NICabs_COT, fill= "pink"))+ geom_boxplot() + labs(y="Nicotine consumption (mg/day/person)",x=NULL)+
-  geom_hline(aes(yintercept = mean(NICabs_COT)), color="blue") +
+  #geom_hline(aes(yintercept = mean(NICabs_COT)), color="blue") +
   theme_bw()+
   theme_classic()+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 2))+
@@ -341,7 +621,7 @@ m
 
 kruskal.test(NICabs_COT~Weekday, data=WBE)
 table1(~NICabs_COT+ Tobacco_COT|Weekday, data = WBE)
-ggsave("Weekly_nicotine_use.jpg", dpi=300)
+ggsave("Weekly_nicotine_use.tiff", dpi=500)
 ```
 
 #Between periods
@@ -352,16 +632,20 @@ n= ggplot(WBE,aes(x= as.factor(Period),y=NICabs_COT, fill=Period))+
   geom_boxplot()+ labs(y="Nicotine consumption (mg/day/person)",x=NULL)+
   theme_bw()+
   theme_classic()+
-  geom_hline(aes(yintercept = mean(NICabs_COT)), color="brown") +
+  #geom_hline(aes(yintercept = mean(NICabs_COT)), color="brown") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 2))+
   theme(text = element_text(family = "Times New Roman")) +
   easy_remove_legend()+
   easy_remove_legend_title()
 n
-ggsave("Nicotine consumption.jpg",  dpi= 300)
+ggsave("Nicotine consumption.tiff",  dpi= 500)
 kruskal.test(NICabs_COT~as.factor(Period),data=WBE)
 kruskalmc(NICabs_COT,as.factor(Period))
 table1(~NICabs_COT|Period, data= WBE)
+
+FSA::dunnTest(NICabs_COT~as.factor(Period),
+              data=WBE,
+              method= "bh")
 ```
 
 
